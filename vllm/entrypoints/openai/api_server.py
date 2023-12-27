@@ -275,13 +275,6 @@ async def create_chat_completion(request: ChatCompletionRequest,
     if error_check_ret is not None:
         return error_check_ret
 
-    if request.grammar:
-        grammar_logits_processor = GrammarLogitsProcessor(
-            tokenizer=engine.model_config.tokenizer, grammar=request.grammar)
-        logits_processors = [grammar_logits_processor]
-    else:
-        logits_processors = []
-
     model_name = request.model
     request_id = f"cmpl-{random_uuid()}"
     created_time = int(time.monotonic())
@@ -305,7 +298,6 @@ async def create_chat_completion(request: ChatCompletionRequest,
             use_beam_search=request.use_beam_search,
             skip_special_tokens=request.skip_special_tokens,
             spaces_between_special_tokens=spaces_between_special_tokens,
-            logits_processors=logits_processors,
         )
     except ValueError as e:
         return create_error_response(HTTPStatus.BAD_REQUEST, str(e))
@@ -530,6 +522,14 @@ async def create_completion(request: CompletionRequest, raw_request: Request):
     if error_check_ret is not None:
         return error_check_ret
 
+    logger.info(f"grammar: {request.grammar}")
+    if request.grammar:
+        grammar_logits_processor = GrammarLogitsProcessor(
+            tokenizer=engine.model_config.tokenizer, grammar=request.grammar)
+        logits_processors = [grammar_logits_processor]
+    else:
+        logits_processors = []
+
     created_time = int(time.monotonic())
     try:
         spaces_between_special_tokens = request.spaces_between_special_tokens
@@ -553,6 +553,7 @@ async def create_completion(request: CompletionRequest, raw_request: Request):
             prompt_logprobs=request.logprobs if request.echo else None,
             skip_special_tokens=request.skip_special_tokens,
             spaces_between_special_tokens=spaces_between_special_tokens,
+            logits_processors=logits_processors
         )
     except ValueError as e:
         return create_error_response(HTTPStatus.BAD_REQUEST, str(e))
