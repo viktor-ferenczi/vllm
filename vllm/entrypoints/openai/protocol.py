@@ -77,6 +77,7 @@ class ChatCompletionRequest(BaseModel):
     echo: Optional[bool] = False
     repetition_penalty: Optional[float] = 1.0
     min_p: Optional[float] = 0.0
+    grammar: Optional[str] = None
 
 
 class CompletionRequest(BaseModel):
